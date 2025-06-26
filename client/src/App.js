@@ -6,7 +6,7 @@ const App = () => {
   const [messages,setMessages]=useState([]);
   const [id,setId] = useState("");
   const socket = useMemo( ()=>
-      io("http://localhost:5000")
+      io("https://guff-ar6e.onrender.com")
   ,[])
 
   const handleSubmit = (e) => {
