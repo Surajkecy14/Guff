@@ -7,7 +7,7 @@ const App = () => {
   const [messages, setMessages] = useState([]);
   const [id, setId] = useState('');
   const [joinCode, setJoinCode] = useState('');
-  const [isTyping, setIsTyping] = useState(false); // 👈 Typing state
+  const [isTyping, setIsTyping] = useState(false);
   const socket = useMemo(() => io("https://guff-ar6e.onrender.com"), []);
   const messageEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
@@ -21,7 +21,6 @@ const App = () => {
       setMessages(prev => [...prev, { message, senderId }]);
     });
 
-    // Listen for typing event
     socket.on("typing", ({ senderId }) => {
       if (senderId !== socket.id) {
         setIsTyping(true);
@@ -44,6 +43,7 @@ const App = () => {
 
   const handleJoinRoom = (e) => {
     e.preventDefault();
+    if (!joinCode.trim()) return;
     socket.emit("join", joinCode);
     setRoomId(joinCode);
   };
@@ -56,18 +56,34 @@ const App = () => {
     setMessage('');
   };
 
-  // 👇 Emit typing event on input
   const handleTyping = (e) => {
     setMessage(e.target.value);
-    socket.emit("typing", { roomId, senderId: socket.id });
+    if (roomId) {
+      socket.emit("typing", { roomId, senderId: socket.id });
+    }
   };
 
   return (
     <div className="container-fluid vh-100 bg-light d-flex flex-column">
-      <div className="row flex-grow-1 d-flex" style={{ overflow: 'hidden' }}>
+      
+      {/* Mobile / Top Navbar Join */}
+      <div className="row d-md-none bg-dark text-white p-2 align-items-center">
+        <form className="d-flex w-100 gap-2" onSubmit={handleJoinRoom}>
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Room Code"
+            value={joinCode}
+            onChange={(e) => setJoinCode(e.target.value)}
+          />
+          <button type="submit" className="btn btn-warning">Join</button>
+        </form>
+      </div>
 
-        {/* Sidebar */}
-        <div className="col-12 col-md-3 bg-dark text-white d-flex flex-column justify-content-center p-4">
+      <div className="row flex-grow-1 d-flex" style={{ overflow: 'hidden' }}>
+        
+        {/* Desktop Sidebar */}
+        <div className="d-none d-md-flex col-md-3 bg-dark text-white flex-column justify-content-center p-4">
           <h4 className="text-center mb-4">🔐 Join Room</h4>
           <form onSubmit={handleJoinRoom}>
             <input
@@ -83,13 +99,13 @@ const App = () => {
 
         {/* Chat Section */}
         <div className="col-12 col-md-9 d-flex flex-column p-0">
-
+          
           {/* Header */}
           <div className="bg-primary text-white px-3 py-2">
             <h6 className="mb-0">Room: {roomId || "Not joined"}</h6>
           </div>
 
-          {/* Message Area */}
+          {/* Messages */}
           <div
             className="px-3 py-2"
             style={{
@@ -116,6 +132,7 @@ const App = () => {
                   </div>
                 </li>
               ))}
+
               {/* Typing indicator */}
               {isTyping && (
                 <li className="d-flex mb-2 justify-content-start">
@@ -123,10 +140,11 @@ const App = () => {
                     className="p-2 rounded-3 bg-light border text-muted"
                     style={{ fontStyle: 'italic', fontSize: '0.9rem' }}
                   >
-                    SomeOne is typing...
+                    👤 Someone is typing...
                   </div>
                 </li>
               )}
+
               <div ref={messageEndRef}></div>
             </ul>
           </div>
