@@ -41,6 +41,10 @@ io.on("connection", (socket) => {
 
     console.log(`💬 Message from ${socket.id} in room ${roomId}: ${message}`);
   });
+  socket.on("typing", ({ roomId, senderId }) => {
+  socket.to(roomId).emit("typing", { senderId });
+});
+
 
   // Optional: handle disconnect
   socket.on("disconnect", () => {

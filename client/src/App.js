@@ -7,8 +7,10 @@ const App = () => {
   const [messages, setMessages] = useState([]);
   const [id, setId] = useState('');
   const [joinCode, setJoinCode] = useState('');
+  const [isTyping, setIsTyping] = useState(false); // 👈 Typing state
   const socket = useMemo(() => io("https://guff-ar6e.onrender.com"), []);
   const messageEndRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
 
   useEffect(() => {
     socket.on("connect", () => {
@@ -19,7 +21,21 @@ const App = () => {
       setMessages(prev => [...prev, { message, senderId }]);
     });
 
-    return () => socket.disconnect();
+    // Listen for typing event
+    socket.on("typing", ({ senderId }) => {
+      if (senderId !== socket.id) {
+        setIsTyping(true);
+        clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = setTimeout(() => {
+          setIsTyping(false);
+        }, 1500);
+      }
+    });
+
+    return () => {
+      socket.disconnect();
+      clearTimeout(typingTimeoutRef.current);
+    };
   }, [socket]);
 
   useEffect(() => {
@@ -40,11 +56,17 @@ const App = () => {
     setMessage('');
   };
 
+  // 👇 Emit typing event on input
+  const handleTyping = (e) => {
+    setMessage(e.target.value);
+    socket.emit("typing", { roomId, senderId: socket.id });
+  };
+
   return (
     <div className="container-fluid vh-100 bg-light d-flex flex-column">
       <div className="row flex-grow-1 d-flex" style={{ overflow: 'hidden' }}>
 
-        {/* Sidebar (Join Room) */}
+        {/* Sidebar */}
         <div className="col-12 col-md-3 bg-dark text-white d-flex flex-column justify-content-center p-4">
           <h4 className="text-center mb-4">🔐 Join Room</h4>
           <form onSubmit={handleJoinRoom}>
@@ -67,7 +89,7 @@ const App = () => {
             <h6 className="mb-0">Room: {roomId || "Not joined"}</h6>
           </div>
 
-          {/* Scrollable Message Area */}
+          {/* Message Area */}
           <div
             className="px-3 py-2"
             style={{
@@ -90,15 +112,26 @@ const App = () => {
                       : 'bg-white text-dark border'}`}
                     style={{ maxWidth: '75%' }}
                   >
-                    {m.senderId === id ? m.message : `👤 Stranger: ${m.message}`}
+                    {m.senderId === id ? m.message : `👤: ${m.message}`}
                   </div>
                 </li>
               ))}
+              {/* Typing indicator */}
+              {isTyping && (
+                <li className="d-flex mb-2 justify-content-start">
+                  <div
+                    className="p-2 rounded-3 bg-light border text-muted"
+                    style={{ fontStyle: 'italic', fontSize: '0.9rem' }}
+                  >
+                    SomeOne is typing...
+                  </div>
+                </li>
+              )}
               <div ref={messageEndRef}></div>
             </ul>
           </div>
 
-          {/* Input Bar */}
+          {/* Input */}
           <form
             onSubmit={handleSendMessage}
             className="d-flex border-top p-2 bg-white"
@@ -109,7 +142,7 @@ const App = () => {
               className="form-control me-2"
               placeholder="Type a message..."
               value={message}
-              onChange={(e) => setMessage(e.target.value)}
+              onChange={handleTyping}
             />
             <button type="submit" className="btn btn-primary px-4 fw-semibold">Send</button>
           </form>
