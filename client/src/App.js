@@ -61,17 +61,21 @@ const App = () => {
 
         {/* Chat Section */}
         <div className="col-12 col-md-9 d-flex flex-column p-0">
+
           {/* Header */}
           <div className="bg-primary text-white px-3 py-2">
             <h6 className="mb-0">Room: {roomId || "Not joined"}</h6>
           </div>
 
-          {/* Message Scroll Area */}
+          {/* Scrollable Message Area */}
           <div
-            className="flex-grow-1 px-3 py-2"
+            className="px-3 py-2"
             style={{
+              flexGrow: 1,
               overflowY: 'auto',
-              backgroundColor: '#f1f1f1'
+              backgroundColor: '#f1f1f1',
+              height: 0,
+              minHeight: 0
             }}
           >
             <ul className="list-unstyled mb-0">
