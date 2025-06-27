@@ -18,6 +18,7 @@ const App = () => {
   const handleJoinRoom = (e)=>{
     e.preventDefault();
     socket.emit("join",joinCode)
+    setRoomId(joinCode)
   }
   useEffect(()=>{
     socket.on("connect", ()=>{
