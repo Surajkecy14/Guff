@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
+import EmojiPicker from 'emoji-picker-react';
 
 const App = () => {
   const [message, setMessage] = useState('');
@@ -8,13 +9,14 @@ const App = () => {
   const [id, setId] = useState('');
   const [joinCode, setJoinCode] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   const socket = useMemo(() => io("https://guff-ar6e.onrender.com"), []);
   const ringSound = useMemo(() => new Audio('/ring.mp3'), []);
   const messageEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
 
-  // ✅ Ask for notification permission
+  // Ask for notification permission
   useEffect(() => {
     if (Notification.permission !== 'granted') {
       Notification.requestPermission().then((perm) => {
@@ -33,17 +35,14 @@ const App = () => {
     socket.on("recieved-message", ({ message, senderId }) => {
       setMessages(prev => [...prev, { message, senderId }]);
 
-      // 🔔 Ring + Push Notification if from others and tab not visible
       if (senderId !== socket.id && document.hidden) {
         ringSound.play().catch((e) => console.log("Audio error:", e));
-
         if (Notification.permission === 'granted') {
           new Notification("New message 💬", {
             body: message,
-            icon: '/chat-icon.png', // optional icon
+            icon: '/chat-icon.png',
           });
         }
-
         document.title = "🔔 New message!";
         setTimeout(() => {
           document.title = "GuffHanum";
@@ -84,6 +83,7 @@ const App = () => {
     socket.emit("message", { message, roomId });
     setMessages(prev => [...prev, { message, senderId: socket.id }]);
     setMessage('');
+    setShowEmojiPicker(false);
   };
 
   const handleTyping = (e) => {
@@ -93,9 +93,14 @@ const App = () => {
     }
   };
 
+  // Emoji picker handler
+  const onEmojiClick = (emojiData) => {
+    setMessage(prev => prev + emojiData.emoji);
+  };
+
   return (
     <div className="container-fluid vh-100 bg-light d-flex flex-column">
-      
+
       {/* Mobile Join Bar */}
       <div className="row d-md-none bg-dark text-white p-2 align-items-center">
         <form className="d-flex w-100 gap-2" onSubmit={handleJoinRoom}>
@@ -111,7 +116,7 @@ const App = () => {
       </div>
 
       <div className="row flex-grow-1 d-flex" style={{ overflow: 'hidden' }}>
-        
+
         {/* Desktop Sidebar */}
         <div className="d-none d-md-flex col-md-3 bg-dark text-white flex-column justify-content-center p-4">
           <h4 className="text-center mb-4">🔐 Join Room</h4>
@@ -129,7 +134,7 @@ const App = () => {
 
         {/* Chat Area */}
         <div className="col-12 col-md-9 d-flex flex-column p-0">
-          
+
           {/* Header */}
           <div className="bg-primary text-white px-3 py-2">
             <h6 className="mb-0">Room: {roomId || "Not joined"}</h6>
@@ -182,17 +187,35 @@ const App = () => {
           {/* Input Bar */}
           <form
             onSubmit={handleSendMessage}
-            className="d-flex border-top p-2 bg-white"
-            style={{ flexShrink: 0 }}
+            className="d-flex border-top p-2 bg-white flex-column flex-md-row align-items-start align-items-md-center"
+            style={{ flexShrink: 0, position: 'relative' }}
           >
+            <button
+              type="button"
+              className="btn btn-outline-secondary me-2 mb-2 mb-md-0"
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            >
+              😊
+            </button>
+
             <input
               type="text"
               className="form-control me-2"
               placeholder="Type a message..."
               value={message}
               onChange={handleTyping}
+              autoComplete="off"
             />
-            <button type="submit" className="btn btn-primary px-4 fw-semibold">Send</button>
+            <button type="submit" className="btn btn-primary px-4 fw-semibold">
+              Send
+            </button>
+
+            {/* Emoji Picker */}
+            {showEmojiPicker && (
+              <div style={{ position: 'absolute', bottom: '50px', left: '50px', zIndex: 999 }}>
+                <EmojiPicker onEmojiClick={onEmojiClick} height={300} />
+              </div>
+            )}
           </form>
         </div>
       </div>
