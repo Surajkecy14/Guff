@@ -14,6 +14,17 @@ const App = () => {
   const messageEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
 
+  // ✅ Ask for notification permission
+  useEffect(() => {
+    if (Notification.permission !== 'granted') {
+      Notification.requestPermission().then((perm) => {
+        if (perm === 'granted') {
+          console.log('🔔 Notifications enabled');
+        }
+      });
+    }
+  }, []);
+
   useEffect(() => {
     socket.on("connect", () => {
       setId(socket.id);
@@ -22,9 +33,17 @@ const App = () => {
     socket.on("recieved-message", ({ message, senderId }) => {
       setMessages(prev => [...prev, { message, senderId }]);
 
-      // 🔔 Only play sound if message is from someone else and tab is not active
+      // 🔔 Ring + Push Notification if from others and tab not visible
       if (senderId !== socket.id && document.hidden) {
-        ringSound.play().catch((e) => console.log("Audio play error:", e));
+        ringSound.play().catch((e) => console.log("Audio error:", e));
+
+        if (Notification.permission === 'granted') {
+          new Notification("New message 💬", {
+            body: message,
+            icon: '/chat-icon.png', // optional icon
+          });
+        }
+
         document.title = "🔔 New message!";
         setTimeout(() => {
           document.title = "GuffHanum";
