@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { io } from 'socket.io-client';
 
 const App = () => {
@@ -7,6 +7,7 @@ const App = () => {
   const [messages, setMessages] = useState([]);
   const [id, setId] = useState('');
   const [joinCode, setJoinCode] = useState('');
+  const messageEndRef = useRef(null);
 
   const socket = useMemo(() => io("https://guff-ar6e.onrender.com"), []);
 
@@ -55,14 +56,17 @@ const App = () => {
         </div>
 
         {/* Chat Area */}
-        <div className="col-md-9 d-flex flex-column justify-content-between bg-white p-0">
+        <div className="col-md-9 d-flex flex-column bg-white p-0" style={{ height: '100%' }}>
           {/* Header */}
-          <div className="bg-primary text-white p-3">
+          <div className="bg-primary text-white p-3 flex-shrink-0">
             <h5 className="mb-0">GuffHanum - Room: {roomId || "None"}</h5>
           </div>
 
-          {/* Messages Area */}
-          <div className="flex-grow-1 overflow-auto p-3" style={{ background: '#f7f7f7' }}>
+          {/* Scrollable Messages Area */}
+          <div
+            className="flex-grow-1 overflow-auto p-3"
+            style={{ background: '#f7f7f7' }}
+          >
             <ul className="list-unstyled">
               {messages.map((m, i) => (
                 <li
@@ -70,18 +74,19 @@ const App = () => {
                   className={`d-flex mb-2 ${m.senderId === id ? 'justify-content-end' : 'justify-content-start'}`}
                 >
                   <div
-                    className={`p-2 rounded ${m.senderId === id ? 'bg-success text-white' : 'bg-secondary text-white'}`}
+                    className={`p-2 rounded ${m.senderId === id ? 'bg-primary text-white' : 'bg-secondary text-white'}`}
                     style={{ maxWidth: '70%' }}
                   >
-                    {m.senderId === id ? m.message : `Stranger: ${m.message}`}
+                    {m.senderId === id ? m.message : `Someone:  ${m.message}`}
                   </div>
                 </li>
               ))}
+              <div ref={messageEndRef}></div>
             </ul>
           </div>
 
           {/* Typing Area */}
-          <form onSubmit={handleSendMessage} className="p-3 border-top d-flex">
+          <form onSubmit={handleSendMessage} className="p-3 border-top d-flex flex-shrink-0">
             <input
               type="text"
               className="form-control me-2"
