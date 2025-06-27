@@ -8,7 +8,9 @@ const App = () => {
   const [id, setId] = useState('');
   const [joinCode, setJoinCode] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+
   const socket = useMemo(() => io("https://guff-ar6e.onrender.com"), []);
+  const ringSound = useMemo(() => new Audio('/ring.mp3'), []); // 🔔 Sound
   const messageEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
 
@@ -19,6 +21,11 @@ const App = () => {
 
     socket.on("recieved-message", ({ message, senderId }) => {
       setMessages(prev => [...prev, { message, senderId }]);
+
+      // 🔔 Play sound for messages not from you
+      if (senderId !== socket.id) {
+        ringSound.play().catch((e) => console.log("Audio play error:", e));
+      }
     });
 
     socket.on("typing", ({ senderId }) => {
@@ -35,7 +42,7 @@ const App = () => {
       socket.disconnect();
       clearTimeout(typingTimeoutRef.current);
     };
-  }, [socket]);
+  }, [socket, ringSound]);
 
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -66,7 +73,7 @@ const App = () => {
   return (
     <div className="container-fluid vh-100 bg-light d-flex flex-column">
       
-      {/* Mobile / Top Navbar Join */}
+      {/* Mobile Join Bar */}
       <div className="row d-md-none bg-dark text-white p-2 align-items-center">
         <form className="d-flex w-100 gap-2" onSubmit={handleJoinRoom}>
           <input
@@ -97,7 +104,7 @@ const App = () => {
           </form>
         </div>
 
-        {/* Chat Section */}
+        {/* Chat Area */}
         <div className="col-12 col-md-9 d-flex flex-column p-0">
           
           {/* Header */}
@@ -105,7 +112,7 @@ const App = () => {
             <h6 className="mb-0">Room: {roomId || "Not joined"}</h6>
           </div>
 
-          {/* Messages */}
+          {/* Messages Area */}
           <div
             className="px-3 py-2"
             style={{
@@ -149,7 +156,7 @@ const App = () => {
             </ul>
           </div>
 
-          {/* Input */}
+          {/* Input Bar */}
           <form
             onSubmit={handleSendMessage}
             className="d-flex border-top p-2 bg-white"
