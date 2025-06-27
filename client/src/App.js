@@ -41,42 +41,47 @@ const App = () => {
   };
 
   return (
-    <div className="container-fluid vh-100 d-flex align-items-center justify-content-center bg-gradient">
-      <div className="row w-100 shadow-lg" style={{ height: '90vh', maxWidth: '1100px', borderRadius: '15px', overflow: 'hidden' }}>
-        
-        {/* Left Sidebar */}
-        <div className="col-md-3 d-flex flex-column justify-content-center bg-dark text-light p-4">
+    <div className="container-fluid vh-100 bg-light d-flex flex-column">
+      <div className="row flex-grow-1 d-flex" style={{ overflow: 'hidden' }}>
+
+        {/* Sidebar (Join Room) */}
+        <div className="col-12 col-md-3 bg-dark text-white d-flex flex-column justify-content-center p-4">
           <h4 className="text-center mb-4">🔐 Join Room</h4>
           <form onSubmit={handleJoinRoom}>
             <input
               type="text"
-              className="form-control mb-3"
+              className="form-control mb-2"
               placeholder="Room Code"
               value={joinCode}
               onChange={(e) => setJoinCode(e.target.value)}
             />
-            <button type="submit" className="btn btn-warning w-100 fw-bold">Join</button>
+            <button type="submit" className="btn btn-warning w-100">Join</button>
           </form>
         </div>
 
-        {/* Chat Area */}
-        <div className="col-md-9 d-flex flex-column p-0 bg-light">
-          
+        {/* Chat Section */}
+        <div className="col-12 col-md-9 d-flex flex-column p-0">
           {/* Header */}
-          <div className="bg-primary text-white p-3 fw-semibold shadow-sm">
-            Chat Room: {roomId || 'Not Joined Yet'}
+          <div className="bg-primary text-white px-3 py-2">
+            <h6 className="mb-0">Room: {roomId || "Not joined"}</h6>
           </div>
 
-          {/* Messages */}
-          <div className="flex-grow-1 overflow-auto p-3" style={{ background: '#e9ecef' }}>
-            <ul className="list-unstyled">
+          {/* Message Scroll Area */}
+          <div
+            className="flex-grow-1 px-3 py-2"
+            style={{
+              overflowY: 'auto',
+              backgroundColor: '#f1f1f1'
+            }}
+          >
+            <ul className="list-unstyled mb-0">
               {messages.map((m, i) => (
                 <li
                   key={i}
                   className={`d-flex mb-2 ${m.senderId === id ? 'justify-content-end' : 'justify-content-start'}`}
                 >
                   <div
-                    className={`p-2 rounded-3 shadow-sm ${m.senderId === id
+                    className={`p-2 rounded-3 ${m.senderId === id
                       ? 'bg-info text-dark'
                       : 'bg-white text-dark border'}`}
                     style={{ maxWidth: '75%' }}
@@ -90,15 +95,19 @@ const App = () => {
           </div>
 
           {/* Input Bar */}
-          <form onSubmit={handleSendMessage} className="p-3 border-top d-flex bg-white">
+          <form
+            onSubmit={handleSendMessage}
+            className="d-flex border-top p-2 bg-white"
+            style={{ flexShrink: 0 }}
+          >
             <input
               type="text"
               className="form-control me-2"
-              placeholder="Type your message..."
+              placeholder="Type a message..."
               value={message}
               onChange={(e) => setMessage(e.target.value)}
             />
-            <button type="submit" className="btn btn-primary fw-bold px-4">Send</button>
+            <button type="submit" className="btn btn-primary px-4 fw-semibold">Send</button>
           </form>
         </div>
       </div>
