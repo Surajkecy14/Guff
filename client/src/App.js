@@ -10,7 +10,7 @@ const App = () => {
   const [isTyping, setIsTyping] = useState(false);
 
   const socket = useMemo(() => io("https://guff-ar6e.onrender.com"), []);
-  const ringSound = useMemo(() => new Audio('/ring.mp3'), []); // 🔔 Sound
+  const ringSound = useMemo(() => new Audio('/ring.mp3'), []);
   const messageEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
 
@@ -22,9 +22,13 @@ const App = () => {
     socket.on("recieved-message", ({ message, senderId }) => {
       setMessages(prev => [...prev, { message, senderId }]);
 
-      // 🔔 Play sound for messages not from you
-      if (senderId !== socket.id) {
+      // 🔔 Only play sound if message is from someone else and tab is not active
+      if (senderId !== socket.id && document.hidden) {
         ringSound.play().catch((e) => console.log("Audio play error:", e));
+        document.title = "🔔 New message!";
+        setTimeout(() => {
+          document.title = "GuffHanum";
+        }, 2000);
       }
     });
 
@@ -140,7 +144,7 @@ const App = () => {
                 </li>
               ))}
 
-              {/* Typing indicator */}
+              {/* Typing Indicator */}
               {isTyping && (
                 <li className="d-flex mb-2 justify-content-start">
                   <div
