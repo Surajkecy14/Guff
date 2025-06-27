@@ -16,18 +16,11 @@ const App = () => {
     });
 
     socket.on("recieved-message", ({ message, senderId }) => {
-      setMessages((prev) => [...prev, { message, senderId }]);
+      setMessages(prev => [...prev, { message, senderId }]);
     });
 
     return () => socket.disconnect();
   }, [socket]);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    socket.emit("message", { message, roomId });
-    setMessages((prev) => [...prev, { message, senderId: socket.id }]); // display own message
-    setMessage('');
-  };
 
   const handleJoinRoom = (e) => {
     e.preventDefault();
@@ -35,62 +28,71 @@ const App = () => {
     setRoomId(joinCode);
   };
 
+  const handleSendMessage = (e) => {
+    e.preventDefault();
+    if (!message.trim()) return;
+    socket.emit("message", { message, roomId });
+    setMessages(prev => [...prev, { message, senderId: socket.id }]);
+    setMessage('');
+  };
+
   return (
-    <div style={{ maxWidth: '600px', margin: '20px auto', fontFamily: 'Arial' }}>
-      <h2>💬 GuffHanum</h2>
-      <form onSubmit={handleJoinRoom} style={{ marginBottom: '10px' }}>
-        <input
-          type="text"
-          placeholder="Room Name..."
-          value={joinCode}
-          onChange={(e) => setJoinCode(e.target.value)}
-          style={{ padding: '8px', marginRight: '10px', width: '60%' }}
-        />
-        <button type="submit">Join Room</button>
-      </form>
+    <div className="container-fluid vh-100 d-flex align-items-center justify-content-center bg-light">
+      <div className="row w-100" style={{ height: '90vh' }}>
+        {/* Left Sidebar */}
+        <div className="col-md-3 d-flex flex-column justify-content-center border-end bg-white p-4">
+          <h5 className="text-center mb-3">Join Room</h5>
+          <form onSubmit={handleJoinRoom}>
+            <input
+              type="text"
+              className="form-control mb-2"
+              placeholder="Enter Room ID"
+              value={joinCode}
+              onChange={(e) => setJoinCode(e.target.value)}
+            />
+            <button type="submit" className="btn btn-primary w-100">Join</button>
+          </form>
+        </div>
 
-      <form onSubmit={handleSubmit} style={{ marginBottom: '20px' }}>
-        <input
-          type="text"
-          placeholder="Write your message..."
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          style={{ padding: '8px', marginRight: '10px', width: '60%' }}
-        />
-        <input
-          type="text"
-          placeholder="Room ID..."
-          value={roomId}
-          onChange={(e) => setRoomId(e.target.value)}
-          style={{ padding: '8px', marginRight: '10px', width: '30%' }}
-        />
-        <button type="submit">Send</button>
-      </form>
+        {/* Chat Area */}
+        <div className="col-md-9 d-flex flex-column justify-content-between bg-white p-0">
+          {/* Header */}
+          <div className="bg-primary text-white p-3">
+            <h5 className="mb-0">GuffHanum - Room: {roomId || "None"}</h5>
+          </div>
 
-      <ul style={{ listStyle: 'none', padding: 0 }}>
-        {messages.map((m, i) => (
-          <li
-            key={i}
-            style={{
-              textAlign: m.senderId === id ? 'right' : 'left',
-              marginBottom: '10px'
-            }}
-          >
-            <span
-              style={{
-                display: 'inline-block',
-                backgroundColor: m.senderId === id ? '#a0e7e5' : '#f2f2f2',
-                padding: '10px 15px',
-                borderRadius: '10px',
-                maxWidth: '70%',
-                wordWrap: 'break-word'
-              }}
-            >
-              {m.senderId === id ? m.message : `Stranger: ${m.message}`}
-            </span>
-          </li>
-        ))}
-      </ul>
+          {/* Messages Area */}
+          <div className="flex-grow-1 overflow-auto p-3" style={{ background: '#f7f7f7' }}>
+            <ul className="list-unstyled">
+              {messages.map((m, i) => (
+                <li
+                  key={i}
+                  className={`d-flex mb-2 ${m.senderId === id ? 'justify-content-end' : 'justify-content-start'}`}
+                >
+                  <div
+                    className={`p-2 rounded ${m.senderId === id ? 'bg-success text-white' : 'bg-secondary text-white'}`}
+                    style={{ maxWidth: '70%' }}
+                  >
+                    {m.senderId === id ? m.message : `Stranger: ${m.message}`}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Typing Area */}
+          <form onSubmit={handleSendMessage} className="p-3 border-top d-flex">
+            <input
+              type="text"
+              className="form-control me-2"
+              placeholder="Type a message..."
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+            />
+            <button type="submit" className="btn btn-success">Send</button>
+          </form>
+        </div>
+      </div>
     </div>
   );
 };
