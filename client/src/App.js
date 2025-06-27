@@ -5,6 +5,7 @@ const App = () => {
   const [roomId,setRoomId]= useState('');
   const [messages,setMessages]=useState([]);
   const [id,setId] = useState("");
+  const[joinCode,setJoinCode]= useState("");
   const socket = useMemo( ()=>
       io("https://guff-ar6e.onrender.com")
   ,[])
@@ -14,6 +15,10 @@ const App = () => {
     socket.emit("message",{message,roomId})
     setMessage(''); 
   };
+  const handleJoinRoom = (e)=>{
+    e.preventDefault();
+    socket.emit("join",joinCode)
+  }
   useEffect(()=>{
     socket.on("connect", ()=>{
       setId(socket.id)
@@ -27,8 +32,18 @@ const App = () => {
    
   return ( 
     <div>
-      <h1>HELLO PROGRAMMER!!</h1>
+      <h1>welcome to GuffHanum</h1>
       <h6>{id}</h6>
+      <form onSubmit={handleJoinRoom}>
+        <input
+          type="text"
+          placeholder="Room Name..."
+          value={joinCode}
+          onChange={(e) => setJoinCode(e.target.value)}
+          style={{ padding: '8px', marginRight: '10px' }}
+        />
+        <button type="submit" style={{ padding: '8px 16px' }}>join</button>
+        </form>
        <form onSubmit={handleSubmit}>
         <input
           type="text"
